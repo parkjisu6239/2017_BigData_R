@@ -4,6 +4,8 @@
 >
 > 교수명 : Aziz Nasridinov
 
+- https://parkjisu6239.github.io/2017_BigData_R/user
+
 
 
 ## KNN
