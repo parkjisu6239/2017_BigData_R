@@ -1,0 +1,78 @@
+---
+title: "User Knowledge Modeling Data Set"
+author: "2015015017 park ji su"
+date: "2017년 11월 13일"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+#knn
+
+user <- read.csv("user.csv", stringsAsFactors = FALSE)
+
+str(user)
+
+table(user$UNS)
+
+round(prop.table(table(user$UNS)) * 100, digits = 1)
+
+normalize <- function(x) {
+ return ((x - min(x)) / (max(x) - min(x)))
+}
+
+user_n<-as.data.frame(lapply(user[1:5],normalize))
+
+user_train <- user_n[1:198, ]
+user_test <- user_n[199:258, ]
+
+
+user_train_labels <- user[1:198, 6]
+user_test_labels <- user[199:258, 6]
+
+library(class)
+
+user_test_pred <- knn(train = user_train, test = user_test,
+                      cl = user_train_labels, k=8)
+
+# 7  is bes 83%
+library(gmodels)
+
+
+CrossTable(x = user_test_labels, y = user_test_pred,
+           prop.chisq=FALSE)
+
+
+#desicion tree
+
+
+user <- read.csv("user.csv", stringsAsFactors = FALSE)
+
+str(user)
+
+set.seed(123)
+
+train_sample <-sample(258,198)
+str(train_sample)
+
+user_train <- user[train_sample,-6]
+user_test <- user[-train_sample, ]
+
+user_train_label<- user[train_sample, 6]
+user_train_label<- as.factor(user_train_label)
+
+#install.packages("C50")
+library(C50)
+
+user_model <- C5.0(user_train,user_train_label)
+
+summary(user_model)
+
+user_pred<-predict(user_model,user_test)
+
+
+CrossTable(user_test$UNS,user_pred,prop.chisq=FALSE,prop.c = FALSE,prop.r = FALSE,dnn= c('actual default','predicted default'))
+
+# 93%
+```
+

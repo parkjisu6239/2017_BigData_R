@@ -1,0 +1,141 @@
+이 데이터는 사용자 지식 모델링 데이터 세트이다.
+데이터 세트의 특성은 다변수이고, 특성 정수형이고, 관련 작업으로는 분류와 클러스터링에 적합하다.
+이 데이터에서는 
+STG (The degree of study time for goal object materails),
+SCG (The degree of repetition number of user for goal object materails)
+STR (The degree of study time of user for related objects with goal object)
+LPR (The exam performance of user for related objects with goal object)
+PEG (The exam performance of user for goal objects)
+위의 5가지를 통해서 class UNS (The knowledge level of user)를 결정하는 데이터 세트이다.
+5가지의 속성값은 모두 0에서 1사이의 수치형자료이고 그 정도를 나타낸다
+
+이 데이터를 고른 이유는 
+첫번째로 클래스를 제외한 속성들이 모두 정수형이여서 knn을 사용할때에 특별한 처리과정을
+거치지 않아도 되기 때문이다.
+두번째로는 다른 데이터를 분석해본 결과 비교적 예측값이 높았기때문이다.
+세번째는 학습시간과 반복횟수등에 따라 사용자의 지식수준이 결정된다는 것이 합리적이라고 생각하기 때문이다.
+
+knn 
+이 데이터에서는 자료가 정수형이였기에 별다른 과정없이 knn이 실행되었지만
+이전에 했던 자료에서는 문자형 자료들이 많아서 모두 factor를 이용하여 바꿔주는 과정이 필요하고
+과정에서 오류가 생겨서 이 데이터를 다시 선택하였다.
+그리고 k를 선택해야하는 것에 번거로움이 있었고 값이 달라질때 마다 예측값의 정확도도 약간씩 달라졌다.
+자료의 범위가 작았기때문에 모든 자료들의 응집도가 높아서 정확도가 떨어졌다
+
+의사 결정 나무
+데이터의 속성에 상관없이 어떤 데이터를 선택하든지 대체적으로 정확한 값이 나왔다.
+따로 특정한 값을 지정하지 않아도 되고, 정확도 역시 knn보다 높았다.
+
+
+//
+
+
+<<Resource Description>>
+This data is a set of user knowledge modeling data.
+The characteristics of the dataset are multivariate, integer-valued, and relevant for classification and clustering.
+In this data
+STG (The degree of study time for goal object materails),
+SCG (The degree of repetition number of user for goal object materails)
+STR (The degree of study time of user for related objects with goal object)
+LPR (The exam performance of user for related objects with goal object)
+PEG (The exam performance of user for goal objects)
+It is a data set that determines the class knowledge level of user (UNS) through the above five.
+All five attribute values ??are numeric data between 0 and 1
+
+<<Reason chosen>>
+I chose this data because
+First, all properties except the class are integers, so no special processing is required when using knn.
+Second, I analyzed other data and found that it was relatively more predictable than the others.
+Third, I think it is reasonable that the knowledge level of the user is determined according to the learning time and the number of repetition.
+
+
+<<Difference between knn and decision tree>>
+knn:
+In this data, the data is integer type, so the knn was executed without any special process. However, there was a lot of character data in the previous data. So we needed to change all the factors. In the process, an error occurred and this data was selected again.
+And it was troublesome to choose k, and every time the value was changed, the accuracy of the predicted value slightly changed.
+Because of the small size of the data, the coherence of all data is high and the accuracy is low
+
+Decision tree:
+Regardless of the nature of the data, whichever data you choose, the values ??are generally accurate.
+You do not have to specify a specific value, and the accuracy is also higher than knn.
+
+
+user knn
+
+user <- read.csv("user.csv", stringsAsFactors = FALSE)
+
+str(user)
+
+table(user$UNS)
+
+round(prop.table(table(user$UNS)) * 100, digits = 1)
+
+normalize <- function(x) {
+ return ((x - min(x)) / (max(x) - min(x)))
+}
+
+user_n<-as.data.frame(lapply(user[1:5],normalize))
+
+user_train <- user_n[1:208, ]
+user_test <- user_n[209:258, ]
+
+
+user_train_labels <- user[1:208, 6]
+user_test_labels <- user[209:258, 6]
+
+library(class)
+
+user_test_pred <- knn(train = user_train, test = user_test,
+                      cl = user_train_labels, k=5)
+
+library(gmodels)
+
+
+CrossTable(x = user_test_labels, y = user_test_pred,
+           prop.chisq=FALSE)
+
+
+
+
+
+
+
+
+
+
+
+user c50
+
+user <- read.csv("user.csv", stringsAsFactors = FALSE)
+
+str(user)
+
+set.seed(123)
+
+train_sample <-sample(258,208)
+str(train_sample)
+
+user_train <- user[train_sample,-6]
+user_test <- user[-train_sample, ]
+
+user_train_label<- user[train_sample, 6]
+user_train_label<- as.factor(user_train_label)
+
+#install.packages("C50")
+library(C50)
+
+user_model <- C5.0(user_train,user_train_label)
+
+summary(user_model)
+
+user_pred<-predict(user_model,user_test)
+
+
+CrossTable(user_test$UNS,user_pred,prop.chisq=FALSE,prop.c = FALSE,prop.r = FALSE,dnn= c('actual default','predicted default'))
+
+
+
+
+
+
+
